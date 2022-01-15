@@ -15,15 +15,6 @@ contract Tetris is Ownable{
     
     event Received (address , uint);
     
-    modifier ownerOfBNB(address _account, uint256 _betAmount) {
-        require(_account.balance >= _betAmount);
-        _;
-    }
-
-    modifier onlyOwnerOf(address _ownerOf) {
-        require(msg.sender == _ownerOf);
-        _;
-    }
 
     modifier onlyWinner(address _winner) {
         require(connectedAccount[0] == _winner || connectedAccount[1] == _winner);
@@ -41,6 +32,14 @@ contract Tetris is Ownable{
         return true;
     }
     
+    function getAccounts() public view returns(address[] memory ) {
+        return connectedAccount;
+    }
+
+    function returnToOwner() public{
+        payable(owner()).transfer(address(this).balance);
+    }
+
     function withdraw() external onlyWinner(msg.sender) payable {
         uint256 amount = betBNBamount[connectedAccount[0]].add(betBNBamount[connectedAccount[1]]);
         payable(msg.sender).transfer(amount.mul(100-feePercent).div(100));
