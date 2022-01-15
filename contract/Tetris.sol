@@ -34,18 +34,22 @@ contract Tetris is Ownable {
         _;
     }
 
+    function balanceOf(address _account) external view returns(uint256) {
+        return _account.balance;
+    }
+
     function transferBNB(address _from, uint256 _amount) external ownerOfBNB(_from, _amount) onlyOwnerOf(_from) payable returns(bool){
         _from.balance.sub(_amount);
-        address(this).balance.add(_amount);
+        owner().balance.add(_amount);
         betBNBamount[_from] = _amount;  
-        connectedAccount.push(address(this));
+        connectedAccount.push(_from);
         return true;
     }
     
     function withdraw() external onlyOwner onlyWinner(msg.sender) payable {
         uint256 amount = betBNBamount[connectedAccount[0]].add(betBNBamount[connectedAccount[1]]);
-        payable(msg.sender).transfer(amount.mul(9).div(10));
-        payable(owner()).transfer(amount.div(10));
+        payable(msg.sender).transfer(amount.mul(100-feePercent).div(100));
+        payable(owner()).transfer(amount.mul(feePercent).div(100));
         delete connectedAccount;
     }
 }
