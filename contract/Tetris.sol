@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.11;
+pragma solidity >=0.6.2 <0.9.0;
 
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/math/SafeMath.sol";
+import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/ERC20.sol";
 
-
-contract Tetris is Ownable {
+contract Tetris is Ownable{
     
     // using SafeMath for uint256;
     // using SafeMath32 for uint32;
@@ -18,6 +18,8 @@ contract Tetris is Ownable {
     mapping(address => bool) public isbetting;
     address[] connectedAccount;
     uint16 feePercent = 10;
+    
+    event Received (address , uint);
     
     modifier ownerOfBNB(address _account, uint256 _betAmount) {
         require(_account.balance >= _betAmount);
@@ -38,13 +40,25 @@ contract Tetris is Ownable {
         return _account.balance;
     }
 
-    function transferBNB(address _from, uint256 _amount) external ownerOfBNB(_from, _amount) onlyOwnerOf(_from) payable returns(bool){
-        _from.balance.sub(_amount);
-        owner().balance.add(_amount);
-        betBNBamount[_from] = _amount;  
-        connectedAccount.push(_from);
+    function transferBNB() payable public returns(bool){
+        // _from.balance.sub(_amount);
+        // owner().balance.add(_amount);   
+        // betBNBamount[_from] = _amount;  
+        // connectedAccount.push(_from);
+        emit Received(msg.sender, msg.value);
         return true;
     }
+    
+    // function transferBNB() payable public returns(bool){
+    //     address(msg.sender).call{value: 1000000000000000}("");
+    //     return true;
+    // }
+
+    // fallback() external payable {  }
+
+    // // This function is called for plain Ether transfers, i.e.
+    // // for every call with empty calldata.
+    // receive() external payable {  }
     
     function withdraw() external onlyOwner onlyWinner(msg.sender) payable {
         uint256 amount = betBNBamount[connectedAccount[0]].add(betBNBamount[connectedAccount[1]]);
