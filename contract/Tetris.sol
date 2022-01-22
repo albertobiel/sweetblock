@@ -9,6 +9,7 @@ contract Tetris is Ownable{
     struct accountGame {
         address connectedAccount1;
         address connectedAccount2;
+        uint256 betAmount;
     }
 
     //Store the accounts as the game ID
@@ -33,19 +34,20 @@ contract Tetris is Ownable{
     event Received (address , uint);
     
     //Return the GameState as the GameID
-    function getGameState(uint gameID) public view returns(address account1, address account2 ) {
+    function getGameState(uint gameID) public view returns(address account1, address account2, uint256 amount ) {
         accountGame memory accountGameById = gameControl[gameID];
-        return (accountGameById.connectedAccount1, accountGameById.connectedAccount2);
+        return (accountGameById.connectedAccount1, accountGameById.connectedAccount2, accountGameById.betAmount);
     }
     
     //Create the Game and Set GameID
     function createGame(uint gameID, address account1, address account2) public returns(bool) {
-        accountGame memory newGame = accountGame(account1, account2);
+        accountGame memory newGame = accountGame(account1, account2, 0);
         gameControl[gameID] = newGame;
         return true;
     }
     //Transform the BNB from account to the SC
-    function transferBNB() payable public returns(bool){
+    function transferBNB(uint gameID) payable public returns(bool){
+        gameControl[gameID].betAmount += msg.value;
         betBNBamount[msg.sender] = msg.value;
         emit Received(msg.sender, msg.value);
         return true;
@@ -59,9 +61,9 @@ contract Tetris is Ownable{
 
     //Return the BNB to the winner, some comision to the owner.
     function withdraw(uint gameID) external payable {
-        uint256 amount = betBNBamount[gameControl[gameID].connectedAccount1]+(betBNBamount[gameControl[gameID].connectedAccount2]);
-        payable(msg.sender).transfer(amount*(100-feePercent)/(100));
-        payable(owner()).transfer(amount*(feePercent)/(100));
-        emit WithDraw(msg.sender, amount*(100-feePercent)/(100));
+        //uint256 amount = betBNBamount[gameControl[gameID].connectedAccount1]+(betBNBamount[gameControl[gameID].connectedAccount2]);
+        payable(msg.sender).transfer(gameControl[gameID].betAmount*(100-feePercent)/(100));
+        payable(owner()).transfer(gameControl[gameID].betAmount*(feePercent)/(100));
+        emit WithDraw(msg.sender, gameControl[gameID].betAmount*(100-feePercent)/(100));
     }
 }
